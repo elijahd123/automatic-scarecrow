@@ -260,37 +260,27 @@ struct PassiveInfraredSensor {
   }
 };
 
-struct RGBLED {
-  int redPin;
-  int greenPin;
-  int bluePin;
+struct LED {
+  int pin;
   unsigned long nextFree;
 
-  RGBLED(int rPin, int gPin, int bPin) {
-    redPin = rPin;
-    greenPin = gPin;
-    bluePin = bPin;
+  LED(int p) {
+    pin = p;
     nextFree = millis();
   }
 
   void setup() {
-    pinMode(redPin, OUTPUT);
-    pinMode(greenPin, OUTPUT);
-    pinMode(bluePin, OUTPUT);
+    pinMode(pin, OUTPUT);
   }
 
-  void setColour(int R, int G, int B) {
+  void turn(int val) {
     if (!isFree()) {
       delay(getTimeUntilFree());
     }
 
-    R = constrain(R, 0, 255);
-    G = constrain(G, 0, 255);
-    B = constrain(B, 0, 255);
+    val = constrain(val, LOW, HIGH);
 
-    analogWrite(redPin, R);
-    analogWrite(greenPin, G);
-    analogWrite(bluePin, B);
+    digitalWrite(pin, val);
 
     setTimeUntilFree(500);
   }
@@ -322,7 +312,8 @@ PassiveInfraredSensor PIR1 = PassiveInfraredSensor(4);
 PassiveInfraredSensor PIR2 = PassiveInfraredSensor(A0);
 PassiveInfraredSensor PIR3 = PassiveInfraredSensor(A1);
 
-RGBLED LED = RGBLED(A3, A4, A5);
+LED led1 = LED(3);
+LED led2 = LED(4);
 
 // Functions
 void fullSetup() {
@@ -334,8 +325,8 @@ void fullSetup() {
   PIR2.setup();
   PIR3.setup();
 
-  LED.setup();
-
+  led1.setup();
+  led2.setup();
   
 
   headServo.turnToIdle();
@@ -345,7 +336,8 @@ void fullSetup() {
   rightServo.turnToIdle();
   delay(500);
 
-  LED.setColour(0, 0, 0);
+  led1.turn(LOW);
+  led2.turn(LOW);
 
   headServo.detachFromPin();
   leftServo.detachFromPin();
@@ -388,8 +380,8 @@ void loop() {
     // Setup for angry
     headServo.turnToMax();
     delay(500);
-    //LED.setColour(255, 0, 0);
-    //headServo.setTimeUntilFree(0);
+    led1.turn(HIGH);
+    led2.turn(HIGH);
     leftServo.setTimeUntilFree(0);
     rightServo.setTimeUntilFree(500);
     }
