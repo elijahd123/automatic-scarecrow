@@ -249,7 +249,7 @@ struct ServoManager : Cooldown {
       ServoMotor* servoMotor = cyclicalQueue[currentCycleIndex];
       currentCycleIndex = (currentCycleIndex + 1) % cyclicalQueueLength;
 
-      servoMotor->turnSweep();
+      (*servoMotor).turnSweep();
       waitForServo(*servoMotor);
     }
   }
