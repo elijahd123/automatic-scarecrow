@@ -47,9 +47,7 @@ int melody[] = {
   NOTE_D5, NOTE_D5, NOTE_AS5, NOTE_A5, NOTE_G5, NOTE_F5,
   NOTE_F5, NOTE_G5, NOTE_A5, NOTE_G5, NOTE_D5, NOTE_E5, NOTE_C6, NOTE_C6,
   NOTE_F6, NOTE_DS6, NOTE_CS6, NOTE_C6, NOTE_AS5, NOTE_GS5, NOTE_G5, NOTE_F5,
-  NOTE_C6,
-
-  REST
+  NOTE_C6
 };
 
 int durations[] = {
@@ -71,8 +69,6 @@ int durations[] = {
   4, 8, 8, 8, 8, 8,
   8, 8, 8, 4, 8, 4, 8, 16,
   4, 8, 4, 8, 4, 8, 4, 8,
-  1,
-
   1
 };
 
@@ -258,7 +254,7 @@ struct ServoManager : Cooldown {
     }
   }
 
-  // The manager is free again once the servo has finished moving, plus a bit extra to settle
+  // The manager is free again once the servo has finished moving, plus a bit extra to settle, although the circuit seems to be fine with settleTime = 0
   void waitForServo(ServoMotor &servoMotor) {
     setTimeUntilFree(servoMotor.getTimeUntilFree() + settleTime);
   }
