@@ -3,21 +3,20 @@
 
 
 // Pins
-const int headServoPin = 10;
-const int leftServoPin = 8;
-const int rightServoPin = 9;
+const int headServoPin = 8;
+const int leftServoPin = 12;
+const int rightServoPin = 11;
 
-const int ultrasonicTrigPin = 11;
-const int ultrasonicEchoPin = 12;
+const int ultrasonic1TrigPin = 9;
+const int ultrasonic1EchoPin = 10;
+const int ultrasonic2TrigPin = 6;
+const int ultrasonic2EchoPin = 7;
 
-const int buzzerPin = 6;
+const int buzzerPin = 2;
 
-const int PIR1Pin = 4;
-const int PIR2Pin = A0;
-const int PIR3Pin = A1;
+const int PIRPin = 5;
 
-const int led1Pin = 3;
-const int led2Pin = 5;
+const int ledPin = 3;
 
 
 // Settings
@@ -433,16 +432,14 @@ ServoMotor rightServo = ServoMotor(rightServoPin);
 
 ServoManager servoManager = ServoManager(servoSettleTime);
 
-UltrasonicSensor ultrasonic = UltrasonicSensor(ultrasonicTrigPin, ultrasonicEchoPin);
+UltrasonicSensor ultrasonic1 = UltrasonicSensor(ultrasonic1TrigPin, ultrasonic1EchoPin);
+UltrasonicSensor ultrasonic2 = UltrasonicSensor(ultrasonic2TrigPin, ultrasonic2EchoPin);
 
 Buzzer buzzer = Buzzer(buzzerPin, melody, durations);
 
-PassiveInfraredSensor PIR1 = PassiveInfraredSensor(PIR1Pin);
-PassiveInfraredSensor PIR2 = PassiveInfraredSensor(PIR2Pin);
-PassiveInfraredSensor PIR3 = PassiveInfraredSensor(PIR3Pin);
+PassiveInfraredSensor PIR = PassiveInfraredSensor(PIRPin);
 
-LED led1 = LED(led1Pin);
-LED led2 = LED(led2Pin);
+LED led = LED(ledPin);
 
 // State
 enum State { CALM, ANGRY };
@@ -450,16 +447,14 @@ State state = CALM;
 
 // Functions
 void setupAllComponents() {
-  ultrasonic.setup();
+  ultrasonic1.setup();
+  ultrasonic2.setup();
 
   buzzer.setup();
 
-  PIR1.setup();
-  PIR2.setup();
-  PIR3.setup();
+  PIR.setup();
 
-  led1.setup();
-  led2.setup();
+  led.setup();
 
   // Arms take turns swinging while angry
   servoManager.addToCyclicalQueue(leftServo);
@@ -479,8 +474,7 @@ void resetToIdle() {
   leftServo.detachFromPin();
   rightServo.detachFromPin();
 
-  led1.turn(LOW);
-  led2.turn(LOW);
+  led.turn(LOW);
 
   buzzer.resetCurrentNoteIndex();
   buzzer.noTone();
@@ -488,29 +482,35 @@ void resetToIdle() {
 
 bool isBirdNearby() {
   // Read values
-  ultrasonic.getDistM();
-  PIR1.getMovement();
-  PIR2.getMovement();
-  PIR3.getMovement();
+  ultrasonic1.getDistM();
+  ultrasonic2.getDistM();
+
+  int recentPIRValue = PIR.getRecentValue();
+
+  PIR.getMovement();
 
   // Process values
-  float distM = ultrasonic.getRecentValue();
-  bool didUltrasonicDetect = distM > 0 && distM <= ultrasonicDetectDistM; // 0 means no echo
+  float distM1 = ultrasonic1.getRecentValue();
+  float distM2 = ultrasonic2.getRecentValue();
+  bool didUltrasonic1Detect = distM1 > 0 && distM1 <= ultrasonicDetectDistM; // 0 means no echo
+  bool didUltrasonic2Detect = distM2 > 0 && distM2 <= ultrasonicDetectDistM; // 0 means no echo
+
 
   bool arePIRsReady = millis() > PIRWarmUpTime;
-  bool didPIR1Detect = arePIRsReady && PIR1.getRecentValue() == HIGH;
-  bool didPIR2Detect = arePIRsReady && PIR2.getRecentValue() == HIGH;
-  bool didPIR3Detect = arePIRsReady && PIR3.getRecentValue() == HIGH;
+  int currentPIRValue = PIR.getRecentValue();
+  bool didPIRDetect = arePIRsReady && currentPIRValue == HIGH && recentPIRValue == LOW;
+  // Serial.print(arePIRsReady);
+  // Serial.print(": ");
+  // Serial.println(didPIRDetect);
 
   // Final result
-  return didUltrasonicDetect || didPIR1Detect || didPIR2Detect || didPIR3Detect;
+  return didUltrasonic1Detect || didUltrasonic2Detect || didPIRDetect;
 }
 
 void transitionToAngry() {
   state = ANGRY;
 
-  led1.turn(HIGH);
-  led2.turn(HIGH);
+  led.turn(HIGH);
 
   buzzer.resetCurrentNoteIndex();
   buzzer.setTimeUntilFree(0);
@@ -553,8 +553,6 @@ void updateAngry() {
 }
 
 void setup() {
-  Serial.begin(9600);
-
   setupAllComponents();
   transitionToCalm();
 }
